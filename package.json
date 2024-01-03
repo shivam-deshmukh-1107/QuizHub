@@ -2,6 +2,13 @@
   "name": "quizhub",
   "version": "0.1.0",
   "private": true,
+  "vercel": {
+    "functions": {
+      "api/questions": {
+        "maxDuration": 5
+      }
+    }
+  },
   "scripts": {
     "dev": "next dev",
     "build": "prisma generate && next build",
