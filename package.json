@@ -5,7 +5,7 @@
   "vercel": {
     "functions": {
       "api/questions": {
-        "maxDuration": 5
+        "maxDuration": 10
       }
     }
   },
