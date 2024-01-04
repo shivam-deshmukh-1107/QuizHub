@@ -6,6 +6,8 @@ import { z } from "zod";
 import axios from "axios";
 import { Session } from "next-auth";
 import { $Enums } from "@prisma/client";
+import { createGameAndFetchQuestions } from "../creategame_fetchquestions/route";
+import { processQuestionsAndCreateTopicCount } from "../processquestions_createtopiccount/route";
 
 // export async function POST(req: Request, res: Response) {
 //   try {
@@ -87,81 +89,81 @@ import { $Enums } from "@prisma/client";
 //   }
 // }
 
-async function createGameAndFetchQuestions(session: Session, body: any) {
-  const { amount, topic, type } = QuizCreationSchema.parse(body);
-  const [game, { data }] = await Promise.all([
-    prisma.game.create({
-      data: {
-        gameType: type,
-        timeStarted: new Date(),
-        userId: session.user.id,
-        topic,
-      },
-    }),
-    axios.post(`${process.env.API_URL as string}/api/questions`, {
-      amount,
-      topic,
-      type,
-    }),
-  ]);
-  return { game, data, type };
-}
+// async function createGameAndFetchQuestions(session: Session, body: any) {
+//   const { amount, topic, type } = QuizCreationSchema.parse(body);
+//   const [game, { data }] = await Promise.all([
+//     prisma.game.create({
+//       data: {
+//         gameType: type,
+//         timeStarted: new Date(),
+//         userId: session.user.id,
+//         topic,
+//       },
+//     }),
+//     axios.post(`${process.env.API_URL as string}/api/questions`, {
+//       amount,
+//       topic,
+//       type,
+//     }),
+//   ]);
+//   return { game, data, type };
+// }
 
-async function processQuestionsAndCreateTopicCount(
-  game: {
-    id: string;
-    userId?: string;
-    timeStarted?: Date;
-    topic: string;
-    timeEnded?: Date | null;
-    gameType?: $Enums.GameType;
-  },
-  data: any,
-  type: string
-) {
-  await prisma.topic_count.upsert({
-    where: { topic: game.topic },
-    create: { topic: game.topic, count: 1 },
-    update: { count: { increment: 1 } },
-  });
+// async function processQuestionsAndCreateTopicCount(
+//   game: {
+//     id: string;
+//     userId?: string;
+//     timeStarted?: Date;
+//     topic: string;
+//     timeEnded?: Date | null;
+//     gameType?: $Enums.GameType;
+//   },
+//   data: any,
+//   type: string
+// ) {
+//   await prisma.topic_count.upsert({
+//     where: { topic: game.topic },
+//     create: { topic: game.topic, count: 1 },
+//     update: { count: { increment: 1 } },
+//   });
 
-  let questionData;
-  if (type === "mcq") {
-    type mcqQuestion = {
-      question: string;
-      answer: string;
-      option1: string;
-      option2: string;
-      option3: string;
-    };
-    questionData = data.questions.map((question: mcqQuestion) => {
-      const options = [
-        question.option1,
-        question.option2,
-        question.option3,
-        question.answer,
-      ].sort(() => Math.random() - 0.5);
-      return {
-        question: question.question,
-        answer: question.answer,
-        options: JSON.stringify(options),
-        gameId: game.id,
-        questionType: "mcq",
-      };
-    });
-  } else if (type === "open_ended") {
-    type openQuestion = { question: string; answer: string };
-    questionData = data.questions.map((question: openQuestion) => {
-      return {
-        question: question.question,
-        answer: question.answer,
-        gameId: game.id,
-        questionType: "open_ended",
-      };
-    });
-  }
-  return questionData;
-}
+//   let questionData;
+//   if (type === "mcq") {
+//     type mcqQuestion = {
+//       question: string;
+//       answer: string;
+//       option1: string;
+//       option2: string;
+//       option3: string;
+//     };
+//     questionData = data.questions.map((question: mcqQuestion) => {
+//       const options = [
+//         question.option1,
+//         question.option2,
+//         question.option3,
+//         question.answer,
+//       ].sort(() => Math.random() - 0.5);
+//       return {
+//         question: question.question,
+//         answer: question.answer,
+//         options: JSON.stringify(options),
+//         gameId: game.id,
+//         questionType: "mcq",
+//       };
+//     });
+//   } else if (type === "open_ended") {
+//     type openQuestion = { question: string; answer: string };
+//     questionData = data.questions.map((question: openQuestion) => {
+//       return {
+//         question: question.question,
+//         answer: question.answer,
+//         gameId: game.id,
+//         questionType: "open_ended",
+//       };
+//     });
+//   }
+//   return questionData;
+// }
 
 export async function POST(req: Request, res: Response) {
   try {
