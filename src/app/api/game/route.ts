@@ -20,6 +20,10 @@ export async function POST(req: Request, res: Response) {
       );
     }
     const body = await req.json();
+
+    // Example: Logging inputs and intermediate results
+    console.log("Received request body:", body);
+
     const { amount, topic, type } = QuizCreationSchema.parse(body);
     const game = await prisma.game.create({
       data: {
@@ -102,6 +106,9 @@ export async function POST(req: Request, res: Response) {
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
+      // Log the ZodError issues for debugging
+      console.error("ZodError:", error.issues);
+
       return NextResponse.json(
         { error: error.issues },
         {
@@ -109,6 +116,9 @@ export async function POST(req: Request, res: Response) {
         }
       );
     } else {
+      // Log the unexpected error for debugging
+      console.error("Unexpected error:", error);
+
       return NextResponse.json(
         { error: "An unexpected error occurred." },
         {
