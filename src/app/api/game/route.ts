@@ -1,3 +1,4 @@
+import { Question } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { getAuthSession } from "@/lib/nextauth";
 import { QuizCreationSchema } from "@/schemas/form/quiz";
@@ -51,6 +52,7 @@ export async function POST(req: Request, res: Response) {
       },
     });
 
+    let questionData;
     if (type === "mcq") {
       type mcqQuestion = {
         question: string;
@@ -59,14 +61,13 @@ export async function POST(req: Request, res: Response) {
         option2: string;
         option3: string;
       };
-      const manyData = data.questions.map((question: mcqQuestion) => {
-        let options = [
+      questionData = data.questions.map((question: mcqQuestion) => {
+        const options = [
           question.option1,
           question.option2,
           question.option3,
           question.answer,
-        ];
-        options.sort(() => Math.random() - 0.5);
+        ].sort(() => Math.random() - 0.5);
         return {
           question: question.question,
           answer: question.answer,
@@ -75,15 +76,12 @@ export async function POST(req: Request, res: Response) {
           questionType: "mcq",
         };
       });
-      await prisma.question.createMany({
-        data: manyData,
-      });
     } else if (type === "open_ended") {
       type openQuestion = {
         question: string;
         answer: string;
       };
-      const manydata = data.questions.map((question: openQuestion) => {
+      questionData = data.questions.map((question: openQuestion) => {
         return {
           question: question.question,
           answer: question.answer,
@@ -91,10 +89,11 @@ export async function POST(req: Request, res: Response) {
           questionType: "open_ended",
         };
       });
-      await prisma.question.createMany({
-        data: manydata,
-      });
     }
+    await prisma.question.createMany({
+      data: questionData,
+    });
+
     return NextResponse.json({
       gameId: game.id,
     });
