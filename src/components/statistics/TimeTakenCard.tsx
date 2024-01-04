@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Hourglass } from "lucide-react";
 import { formatTimeDelta } from "@/lib/utils";
 import { differenceInSeconds } from "date-fns";
+import { log } from "console";
 
 type Props = {
   timeEnded: Date;
@@ -10,6 +11,8 @@ type Props = {
 };
 
 const TimeTakenCard = ({ timeEnded, timeStarted }: Props) => {
+  console.log(timeStarted);
+  console.log(timeEnded);
   return (
     <Card className="md:col-span-4">
       <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
