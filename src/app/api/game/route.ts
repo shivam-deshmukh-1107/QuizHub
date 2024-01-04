@@ -21,18 +21,41 @@ export async function POST(req: Request, res: Response) {
     }
     const body = await req.json();
 
-    // Example: Logging inputs and intermediate results
-    console.log("Received request body:", body);
-
     const { amount, topic, type } = QuizCreationSchema.parse(body);
-    const game = await prisma.game.create({
-      data: {
-        gameType: type,
-        timeStarted: new Date(),
-        userId: session.user.id,
+    // const game = await prisma.game.create({
+    //   data: {
+    //     gameType: type,
+    //     timeStarted: new Date(),
+    //     userId: session.user.id,
+    //     topic,
+    //   },
+    // });
+
+    // const { data } = await axios.post(
+    //   `${process.env.API_URL as string}/api/questions`,
+    //   {
+    //     amount,
+    //     topic,
+    //     type,
+    //   }
+    // );
+
+    const [game, { data }] = await Promise.all([
+      prisma.game.create({
+        data: {
+          gameType: type,
+          timeStarted: new Date(),
+          userId: session.user.id,
+          topic,
+        },
+      }),
+      axios.post(`${process.env.API_URL as string}/api/questions`, {
+        amount,
         topic,
-      },
-    });
+        type,
+      }),
+    ]);
+
     await prisma.topic_count.upsert({
       where: {
         topic,
@@ -48,15 +71,6 @@ export async function POST(req: Request, res: Response) {
       },
     });
 
-    const { data } = await axios.post(
-      `${process.env.API_URL as string}/api/questions`,
-      {
-        amount,
-        topic,
-        type,
-      }
-    );
-
     if (type === "mcq") {
       type mcqQuestion = {
         question: string;
@@ -65,14 +79,14 @@ export async function POST(req: Request, res: Response) {
         option2: string;
         option3: string;
       };
-
-      let manyData = data.questions.map((question: mcqQuestion) => {
+      const manyData = data.questions.map((question: mcqQuestion) => {
         let options = [
           question.option1,
           question.option2,
           question.option3,
           question.answer,
-        ].sort(() => Math.random() - 0.5);
+        ];
+        options.sort(() => Math.random() - 0.5);
         return {
           question: question.question,
           answer: question.answer,
@@ -89,7 +103,7 @@ export async function POST(req: Request, res: Response) {
         question: string;
         answer: string;
       };
-      let manydata = data.questions.map((question: openQuestion) => {
+      const manydata = data.questions.map((question: openQuestion) => {
         return {
           question: question.question,
           answer: question.answer,
@@ -106,9 +120,6 @@ export async function POST(req: Request, res: Response) {
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      // Log the ZodError issues for debugging
-      console.error("ZodError:", error.issues);
-
       return NextResponse.json(
         { error: error.issues },
         {
@@ -116,9 +127,6 @@ export async function POST(req: Request, res: Response) {
         }
       );
     } else {
-      // Log the unexpected error for debugging
-      console.error("Unexpected error:", error);
-
       return NextResponse.json(
         { error: "An unexpected error occurred." },
         {

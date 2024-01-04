@@ -37,7 +37,6 @@ const UserAccountNav = ({ user }: Props) => {
           </div>
         </div>
         <DropdownMenuSeparator />
-        <DropdownMenuSeparator />
         <DropdownMenuItem
           onClick={(e) => {
             e.preventDefault();
