@@ -16,6 +16,10 @@ type Props = {
 };
 
 const QuestionsList = ({ questions }: Props) => {
+  if (questions.length === 0) {
+    return <p>No questions to display.</p>;
+  }
+
   return (
     <Table className="mt-4">
       <TableCaption>End of list.</TableCaption>
